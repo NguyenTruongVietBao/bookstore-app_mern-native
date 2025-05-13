@@ -35,19 +35,19 @@ exports.register = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      // profileImage: `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${username}`,
+      profileImage: `https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${username}`,
     });
 
     // Save user to database
     await newUser.save();
 
     // Generate jwt
-    const token = generateToken(newUser._id);
+    const accessToken = generateToken(newUser._id);
 
     res.status(201).json({
       message: 'User registered successfully. Please verify your email.',
       user: newUser,
-      token: token,
+      accessToken: accessToken,
     });
   } catch (error) {
     console.error(error);
@@ -59,17 +59,15 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate request body
     if (!email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
-    // Check if email already exists
     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ message: "Email doesn't exists" });
     }
-    // Check password
+
     if (password.length < 6) {
       return res
         .status(400)
@@ -80,14 +78,32 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate jwt
-    const token = generateToken(user._id);
+    const accessToken = generateToken(user._id);
 
     res.status(201).json({
       message: 'User login successfully',
-      user: user,
-      token: token,
+      data: {
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          profileImage: user.profileImage,
+        },
+        accessToken: accessToken,
+      },
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.profile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    res
+      .status(200)
+      .json({ message: 'User profile fetched successfully', data: { user } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });

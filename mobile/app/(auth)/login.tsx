@@ -4,35 +4,36 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-} from "react-native";
-import { Image } from "expo-image";
-import React, { useState } from "react";
-import styles from "@/assets/styles/login.styles";
-import { Ionicons } from "@expo/vector-icons";
-import COLORS from "@/constants/colors";
-import { Link } from "expo-router";
-
+  Alert,
+} from 'react-native';
+import { Image } from 'expo-image';
+import React, { useEffect, useState } from 'react';
+import styles from '@/assets/styles/login.styles';
+import { Ionicons } from '@expo/vector-icons';
+import COLORS from '@/constants/colors';
+import { Link, router } from 'expo-router';
+import { useAuthStore } from '@/stores/auth.store';
 const LoginScreen = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('bao@gmail.com');
+  const [password, setPassword] = useState('123123');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isLoading } = useAuthStore();
 
-  const handleLogin = () => {
-    setIsLoading(true);
-    // Simulate login API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Assuming successful login
-      alert("Login successful!");
-    }, 2000);
+  const handleLogin = async () => {
+    const result = await login(email, password);
+    console.log('result', result);
+
+    if (!result.success) {
+      Alert.alert('Login Failed', result.error || 'Something went wrong');
+      return;
+    }
+    router.push('/(tabs)/profile');
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.topIllustration}>
         <Image
-          source={require("@/assets/images/i.png")}
+          source={require('@/assets/images/i.png')}
           style={styles.illustrationImage}
         />
       </View>
@@ -44,19 +45,19 @@ const LoginScreen = () => {
             <Text style={styles.label}>Email</Text>
             <View style={styles.inputContainer}>
               <Ionicons
-                name="mail-outline"
+                name='mail-outline'
                 size={20}
                 color={COLORS.primary}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder='Enter your email'
                 placeholderTextColor={COLORS.placeholderText}
                 value={email}
                 onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
+                keyboardType='email-address'
+                autoCapitalize='none'
               />
             </View>
           </View>
@@ -65,23 +66,23 @@ const LoginScreen = () => {
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputContainer}>
               <Ionicons
-                name="lock-closed-outline"
+                name='lock-closed-outline'
                 size={20}
                 color={COLORS.primary}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your password"
+                placeholder='Enter your password'
                 placeholderTextColor={COLORS.placeholderText}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                autoCapitalize="none"
+                autoCapitalize='none'
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
-                  name={showPassword ? "eye-outline" : "eye-off-outline"}
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={20}
                   color={COLORS.primary}
                   style={styles.inputIcon}
@@ -96,7 +97,7 @@ const LoginScreen = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={"#fff"} />
+              <ActivityIndicator color={'#fff'} />
             ) : (
               <Text style={styles.buttonText}>Login</Text>
             )}
@@ -104,7 +105,7 @@ const LoginScreen = () => {
           {/* Don't have account */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
-            <Link href={"/(auth)/register"} asChild>
+            <Link href={'/(auth)/register'} asChild>
               <TouchableOpacity>
                 <Text style={styles.link}>Sign Up</Text>
               </TouchableOpacity>
