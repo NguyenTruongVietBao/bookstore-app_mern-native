@@ -17,10 +17,13 @@ import styles from '@/assets/styles/create.styles';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '@/constants/colors';
 import * as FileSystem from 'expo-file-system';
+import { useAuthStore } from '@/stores/auth.store';
+
 export default function CreateScreen() {
+  const { user, accessToken } = useAuthStore();
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | null>('');
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [rating, setRating] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,9 +47,10 @@ export default function CreateScreen() {
         mediaTypes: ['images', 'videos'],
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 1,
+        quality: 0.2,
         base64: true,
       });
+      console.log(result);
       if (!result.canceled) {
         setImage(result.assets[0].uri);
         if (result.assets[0].base64) {
@@ -69,7 +73,52 @@ export default function CreateScreen() {
 
   const handleCreate = async () => {
     setIsLoading(true);
-    setError('');
+    if (!title || !caption || !imageBase64) {
+      setError('Please fill in all fields');
+      setIsLoading(false);
+      return;
+    }
+    try {
+      // Get file extension from image uri
+      const fileExtension = image?.split('.');
+      const fileType = fileExtension
+        ? fileExtension[fileExtension.length - 1]
+        : '';
+      const imageType = fileType
+        ? `image/${fileType.toLowerCase()}`
+        : 'image/jpeg';
+      const fullImageUri = `data:${imageType};base64,${imageBase64}`;
+      // Upload image to server
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/books`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title,
+            caption,
+            image: fullImageUri,
+            rating: rating.toString(),
+          }),
+        }
+      );
+      console.log(response);
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      const data = await response.json();
+      console.log(data);
+      Alert.alert('Success', 'Post created successfully');
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Error', 'Failed to upload image');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderRatingPicker = () => {
