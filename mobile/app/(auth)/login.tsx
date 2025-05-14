@@ -17,7 +17,11 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('bao@gmail.com');
   const [password, setPassword] = useState('123123');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, isCheckingAuth } = useAuthStore();
+
+  if (isCheckingAuth) {
+    return null;
+  }
 
   const handleLogin = async () => {
     const result = await login(email, password);

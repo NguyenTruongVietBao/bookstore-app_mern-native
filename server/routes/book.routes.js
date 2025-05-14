@@ -6,6 +6,9 @@ const { protectRoute } = require('../middlewares/auth.middlewares');
 // Get all
 router.get('/', protectRoute, bookController.getAllBooks);
 
+// Get my books
+router.get('/my', protectRoute, bookController.getMyBooks);
+
 // // Get one
 // router.get("/:id", bookController.getBookById);
 

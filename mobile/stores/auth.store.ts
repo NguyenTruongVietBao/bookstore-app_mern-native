@@ -6,6 +6,7 @@ interface AuthState {
   user: any;
   accessToken: string | null;
   isLoading: boolean;
+  isCheckingAuth: boolean;
   error: string | null;
   register: (
     username: string,
@@ -29,6 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: null,
   isLoading: false,
+  isCheckingAuth: true,
   error: null,
 
   register: async (username, email, password) => {
@@ -120,6 +122,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.error('Lỗi khi khởi tạo:', error);
     } finally {
       set({ isLoading: false });
+      set({ isCheckingAuth: false });
     }
   },
 }));

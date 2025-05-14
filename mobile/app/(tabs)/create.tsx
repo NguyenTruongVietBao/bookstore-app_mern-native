@@ -20,14 +20,13 @@ import * as FileSystem from 'expo-file-system';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function CreateScreen() {
-  const { user, accessToken } = useAuthStore();
+  const { accessToken } = useAuthStore();
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [image, setImage] = useState<string | null>('');
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [rating, setRating] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const router = useRouter();
 
@@ -38,7 +37,7 @@ export default function CreateScreen() {
         const { status } =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          setError('Permission not granted to access media library');
+          Alert.alert('Permission not granted to access media library');
           return;
         }
       }
@@ -50,7 +49,7 @@ export default function CreateScreen() {
         quality: 0.2,
         base64: true,
       });
-      console.log(result);
+
       if (!result.canceled) {
         setImage(result.assets[0].uri);
         if (result.assets[0].base64) {
@@ -74,7 +73,7 @@ export default function CreateScreen() {
   const handleCreate = async () => {
     setIsLoading(true);
     if (!title || !caption || !imageBase64) {
-      setError('Please fill in all fields');
+      Alert.alert('Please fill in all fields');
       setIsLoading(false);
       return;
     }
@@ -118,6 +117,11 @@ export default function CreateScreen() {
       Alert.alert('Error', 'Failed to upload image');
     } finally {
       setIsLoading(false);
+      setTitle('');
+      setCaption('');
+      setImage(null);
+      setImageBase64(null);
+      router.push('/profile');
     }
   };
 

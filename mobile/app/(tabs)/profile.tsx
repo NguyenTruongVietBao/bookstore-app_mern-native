@@ -4,31 +4,122 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  StyleSheet,
   Alert,
   ActivityIndicator,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
 import { useAuthStore } from '../../stores/auth.store';
-import { router } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import styles from '@/assets/styles/profile.styles';
+import ProfileHeader from '@/components/profile-header';
+import LogoutButton from '@/components/logout-button';
+import COLORS from '@/constants/colors';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuthStore();
+  const { accessToken } = useAuthStore();
+  const [books, setBooks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  console.log('user', user);
-  const handleLogout = async () => {
+  const [refreshing, setRefreshing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+  const renderRatingStars = (rating: number) => {
+    const stars = [];
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        <Ionicons
+          key={i}
+          name={i <= rating ? 'star' : 'star-outline'}
+          size={18}
+          color={i <= rating ? 'gold' : 'gray'}
+        />
+      );
+    }
+    return stars;
+  };
+
+  const fetchBooks = async () => {
     setIsLoading(true);
     try {
-      await logout();
-      router.replace('/(auth)/login');
-    } catch (error) {
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi đăng xuất');
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/books/my`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log(data);
+      setBooks(data.books);
+    } catch (error: any) {
+      console.log(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!user) {
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const handleDeleteConfirm = async (bookId: string) => {
+    try {
+      Alert.alert('Delete', 'Are you sure you want to delete this book?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await handleDeleteAction(bookId);
+          },
+        },
+      ]);
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  const handleDeleteAction = async (bookId: string) => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/books/${bookId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log(data);
+      fetchBooks();
+    } catch (error: any) {
+      console.log(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await sleep(1000);
+    await fetchBooks();
+    setRefreshing(false);
+  };
+
+  if (isLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size='large' color='#0000ff' />
@@ -36,145 +127,74 @@ export default function ProfileScreen() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Image source={user.profileImage} style={styles.avatar} />
-        <Text style={styles.username}>{user.username}</Text>
-        <Text style={styles.email}>{user.email}</Text>
-      </View>
+  const renderItem = ({ item }: { item: any }) => {
+    return (
+      <View style={styles.bookItem}>
+        <Image source={{ uri: item.image }} style={styles.bookImage} />
 
-      <View style={styles.infoSection}>
-        <View style={styles.infoItem}>
-          <MaterialIcons name='person' size={24} color='#333' />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Tên người dùng</Text>
-            <Text style={styles.infoValue}>{user.username}</Text>
+        <View style={styles.bookInfo}>
+          <Text style={styles.bookTitle}>{item.title}</Text>
+          <View style={styles.ratingContainer}>
+            {renderRatingStars(item.rating)}
           </View>
+          <Text style={styles.bookCaption} numberOfLines={2}>
+            {item.caption}
+          </Text>
+          <Text style={styles.bookDate}>
+            {new Date(item.createdAt).toLocaleDateString()}
+          </Text>
         </View>
 
-        <View style={styles.infoItem}>
-          <MaterialIcons name='email' size={24} color='#333' />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue}>{user.email}</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoItem}>
-          <MaterialIcons name='verified-user' size={24} color='#333' />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>ID người dùng</Text>
-            <Text style={styles.infoValue}>{user._id}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.actionSection}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.logoutButton]}
-          onPress={handleLogout}
-          disabled={isLoading}
-          activeOpacity={0.7}
+          style={styles.deleteButton}
+          onPress={() => handleDeleteConfirm(item._id)}
         >
-          {isLoading ? (
-            <ActivityIndicator size='small' color='#fff' />
-          ) : (
-            <>
-              <MaterialIcons name='logout' size={20} color='#fff' />
-              <Text style={styles.buttonText}>Đăng xuất</Text>
-            </>
-          )}
+          <Ionicons name='trash-outline' size={24} color={COLORS.textDark} />
         </TouchableOpacity>
       </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <ProfileHeader />
+      <LogoutButton />
+
+      <View style={styles.booksHeader}>
+        <Text style={styles.bookTitle}>My Books ({books.length})</Text>
+        <TouchableOpacity>
+          <Ionicons name='add' size={24} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+      {isDeleting && (
+        <View className='my-2'>
+          <ActivityIndicator size='large' color={COLORS.primary} />
+        </View>
+      )}
+      <FlatList
+        data={books}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.booksList}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name='search-outline'
+              size={24}
+              color={COLORS.textSecondary}
+            />
+            <Text style={styles.emptyText}>No books found</Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressBackgroundColor={COLORS.background}
+            colors={[COLORS.primary]}
+          />
+        }
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-  },
-  header: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 12,
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  email: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  infoSection: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    alignItems: 'center',
-  },
-  infoContent: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#888',
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  actionSection: {
-    gap: 12,
-  },
-  actionButton: {
-    backgroundColor: '#4a6ee0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 10,
-    gap: 8,
-  },
-  logoutButton: {
-    backgroundColor: '#e74c3c',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

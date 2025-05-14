@@ -1,6 +1,6 @@
 // styles/profile.styles.js
-import { StyleSheet } from "react-native";
-import COLORS from "../../constants/colors";
+import { StyleSheet } from 'react-native';
+import COLORS from '../../constants/colors';
 
 const styles = StyleSheet.create({
   container: {
@@ -11,17 +11,18 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: COLORS.background,
   },
   profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.cardBackground,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    marginTop: 40,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
@@ -58,9 +59,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: 12,
     padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -70,18 +71,18 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
     marginLeft: 8,
   },
   booksHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   booksTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   booksCount: {
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   bookItem: {
-    flexDirection: "row",
+    flexDirection: 'row',
     backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
     padding: 12,
@@ -113,16 +114,16 @@ const styles = StyleSheet.create({
   },
   bookInfo: {
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   bookTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
   ratingContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 4,
   },
   bookCaption: {
@@ -137,21 +138,21 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 40,
     marginTop: 20,
   },
   emptyText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     color: COLORS.textPrimary,
     marginTop: 16,
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
   addButton: {
     backgroundColor: COLORS.primary,
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
     fontSize: 14,
   },
 });

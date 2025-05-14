@@ -44,7 +44,7 @@ exports.getAllBooks = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(startIndex)
       .limit(limit)
-      .populate('user', 'name imageProfile');
+      .populate('user', 'username profileImage');
 
     res.send({
       message: 'Books fetched successfully',
@@ -56,6 +56,11 @@ exports.getAllBooks = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+exports.getMyBooks = async (req, res) => {
+  const books = await Book.find({ user: req.user._id });
+  res.send({ books });
 };
 
 exports.deleteBook = async (req, res) => {
